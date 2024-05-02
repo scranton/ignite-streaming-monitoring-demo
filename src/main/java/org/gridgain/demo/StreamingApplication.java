@@ -104,11 +104,11 @@ public class StreamingApplication {
                 .setSchema("PUBLIC")).getAll();
 
         utilityCache.query(new SqlFieldsQuery("CREATE TABLE Buyer (" + "id int PRIMARY KEY," + "first_name varchar,"
-                + "last_name varchar," + "age int," + "goverment_id varchar) " + "WITH \"backups=1, cache_name=Buyer\"")
+                + "last_name varchar," + "age int," + "government_id varchar) " + "WITH \"backups=1, cache_name=Buyer\"")
                 .setSchema("PUBLIC")).getAll();
 
         SqlFieldsQuery query = new SqlFieldsQuery(
-                "INSERT INTO Buyer (id, first_name, last_name, age, goverment_id) VALUES (?,?,?,?,?)")
+                "INSERT INTO Buyer (id, first_name, last_name, age, government_id) VALUES (?,?,?,?,?)")
                 .setSchema("PUBLIC");
 
         utilityCache.query(query.setArgs(1, "John", "Smith", 45, "7bfjd73"));

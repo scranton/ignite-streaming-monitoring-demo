@@ -3,7 +3,6 @@ package org.gridgain.demo;
 import com.pubnub.api.PNConfiguration;
 import com.pubnub.api.PubNub;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class PubNubMarketTicker implements MarketTicker {
@@ -18,7 +17,7 @@ public class PubNubMarketTicker implements MarketTicker {
     /**
      * PubNub stream subscription key.
      */
-    private final String STREAM_SUBSCRIPION_KEY = "sub-c-4377ab04-f100-11e3-bffd-02ee2ddab7fe";
+    private final String STREAM_SUBSCRIPTION_KEY = "sub-c-4377ab04-f100-11e3-bffd-02ee2ddab7fe";
 
     private final StreamCallback streamCallback;
 
@@ -28,7 +27,7 @@ public class PubNubMarketTicker implements MarketTicker {
 
     public void start() {
         PNConfiguration cfg = new PNConfiguration();
-        cfg.setSubscribeKey(STREAM_SUBSCRIPION_KEY);
+        cfg.setSubscribeKey(STREAM_SUBSCRIPTION_KEY);
 
         stream = new PubNub(cfg);
 
