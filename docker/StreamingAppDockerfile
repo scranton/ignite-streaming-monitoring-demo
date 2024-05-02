@@ -1,6 +1,7 @@
-FROM openjdk:8
+FROM openjdk:11
 COPY ./target/dependency-jars /usr/app/dependency-jars
 ADD ./target/ignite-streaming-app.jar /usr/app/ignite-streaming-app.jar
 WORKDIR /usr/app
+ENV IGNITE_EVENT_DRIVEN_SERVICE_PROCESSOR_ENABLED=false
 ENTRYPOINT java -jar ignite-streaming-app.jar execTime=$execTime
 

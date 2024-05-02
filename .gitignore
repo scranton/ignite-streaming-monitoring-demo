@@ -3,3 +3,5 @@ ignite/
 .settings/
 .project
 .classpath
+/work/**
+config/gridgain-license.xml

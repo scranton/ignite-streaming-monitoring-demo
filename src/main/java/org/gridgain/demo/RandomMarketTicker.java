@@ -1,5 +1,11 @@
 package org.gridgain.demo;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.pubnub.api.PNConfiguration;
+import com.pubnub.api.PubNub;
+import com.pubnub.api.models.consumer.pubsub.PNMessageResult;
+
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,105 +14,99 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.pubnub.api.PNConfiguration;
-import com.pubnub.api.PubNub;
-import com.pubnub.api.models.consumer.pubsub.PNMessageResult;
-
 public class RandomMarketTicker implements Runnable, MarketTicker {
-	private Random random;
-	private List<Stock> stocks;
-	private Gson gson;
-	private StreamCallback streamCallback;
-	private PubNub pubNub;
-	private ScheduledFuture<?> scheduledFuture;
+    private final Random random;
+    private final List<Stock> stocks;
+    private final Gson gson;
+    private final StreamCallback streamCallback;
+    private final PubNub pubNub;
+    private ScheduledFuture<?> scheduledFuture;
 
-	public RandomMarketTicker(StreamCallback streamCallback) {
-		this.streamCallback = streamCallback;
+    public RandomMarketTicker(StreamCallback streamCallback) {
+        this.streamCallback = streamCallback;
 
-		stocks = new ArrayList<Stock>();
+        stocks = new ArrayList<Stock>();
 
-		stocks.add(new Stock("Amazon", 50, 250, 100));
-		stocks.add(new Stock("Apple", 100, 1000, 100));
-		stocks.add(new Stock("Dell", 100, 500, 100));
-		stocks.add(new Stock("Facebook", 85, 400, 100));
-		stocks.add(new Stock("Google", 75, 300, 100));
-		stocks.add(new Stock("HP", 50, 750, 100));
-		stocks.add(new Stock("IBM", 65, 250, 100));
-		stocks.add(new Stock("Intel", 150, 550, 100));
-		stocks.add(new Stock("Tesla", 110, 600, 100));
-		stocks.add(new Stock("Yahoo", 10, 100, 100));
+        stocks.add(new Stock("Amazon", 50, 250, 100));
+        stocks.add(new Stock("Apple", 100, 1000, 100));
+        stocks.add(new Stock("Dell", 100, 500, 100));
+        stocks.add(new Stock("Facebook", 85, 400, 100));
+        stocks.add(new Stock("Google", 75, 300, 100));
+        stocks.add(new Stock("HP", 50, 750, 100));
+        stocks.add(new Stock("IBM", 65, 250, 100));
+        stocks.add(new Stock("Intel", 150, 550, 100));
+        stocks.add(new Stock("Tesla", 110, 600, 100));
+        stocks.add(new Stock("Yahoo", 10, 100, 100));
 
-		random = new Random();
-		gson = new Gson();
-		pubNub = new PubNub(new PNConfiguration());
-	}
+        random = new Random();
+        gson = new Gson();
+        pubNub = new PubNub(new PNConfiguration());
+    }
 
-	public void start() {
-		scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this, 1000, 200,
-				TimeUnit.MILLISECONDS);
-	}
+    public void start() {
+        scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this, 1000, 200,
+                TimeUnit.MILLISECONDS);
+    }
 
-	public void stop() {
-		scheduledFuture.cancel(true);
-	}
+    public void stop() {
+        scheduledFuture.cancel(true);
+    }
 
-	@Override
-	public void run() {
-		Stock stock = stocks.get(random.nextInt(stocks.size()));
-		updatePrice(stock);
-		String type = Trade.TRADE_TYPE.BUY.name();
-		if (random.nextBoolean()) {
-			type = Trade.TRADE_TYPE.SELL.name();
-		}
-		Trade trade = new Trade(stock.name, random.nextInt(500), stock.currentPrice, type,
-				new Timestamp(System.currentTimeMillis()));
-		
-		JsonElement json = gson.toJsonTree(trade);
+    @Override
+    public void run() {
+        Stock stock = stocks.get(random.nextInt(stocks.size()));
+        updatePrice(stock);
+        String type = Trade.TRADE_TYPE.BUY.name();
+        if (random.nextBoolean()) {
+            type = Trade.TRADE_TYPE.SELL.name();
+        }
+        Trade trade = new Trade(stock.name, random.nextInt(500), stock.currentPrice, type,
+                new Timestamp(System.currentTimeMillis()));
 
-		PNMessageResult result = PNMessageResult.builder().message(json).build();
-		streamCallback.message(pubNub, result);
-	}
+        JsonElement json = gson.toJsonTree(trade);
 
-	private void updatePrice(Stock stock) {
-		// Instead of a fixed volatility, pick a random volatility
-		// each time, between 2 and 10.
-		double volatility = random.nextDouble() * 10 + 2;
+        PNMessageResult result = PNMessageResult.builder().message(json).build();
+        streamCallback.message(pubNub, result);
+    }
 
-		double rnd = random.nextDouble();
+    private void updatePrice(Stock stock) {
+        // Instead of a fixed volatility, pick a random volatility
+        // each time, between 2 and 10.
+        double volatility = random.nextDouble() * 10 + 2;
 
-		double changePercent = 2 * volatility * rnd;
+        double rnd = random.nextDouble();
 
-		if (changePercent > volatility) {
-			changePercent -= (2 * volatility);
-		}
-		double changeAmount = stock.currentPrice * changePercent / 100;
-		double newPrice = stock.currentPrice + changeAmount;
+        double changePercent = 2 * volatility * rnd;
 
-		// Add a ceiling and floor.
-		if (newPrice < stock.minPrice) {
-			newPrice += Math.abs(changeAmount) * 2;
-		} else if (newPrice > stock.maxPrice) {
-			newPrice -= Math.abs(changeAmount) * 2;
-		}
+        if (changePercent > volatility) {
+            changePercent -= (2 * volatility);
+        }
+        double changeAmount = stock.currentPrice * changePercent / 100;
+        double newPrice = stock.currentPrice + changeAmount;
 
-		stock.currentPrice = newPrice;
-	}
+        // Add a ceiling and floor.
+        if (newPrice < stock.minPrice) {
+            newPrice += Math.abs(changeAmount) * 2;
+        } else if (newPrice > stock.maxPrice) {
+            newPrice -= Math.abs(changeAmount) * 2;
+        }
 
-	public static class Stock {
+        stock.currentPrice = newPrice;
+    }
 
-		public String name;
-		public double minPrice;
-		public double maxPrice;
-		public double currentPrice;
+    public static class Stock {
 
-		public Stock(String name, double minPrice, double maxPrice, double currentPrice) {
-			this.name = name;
-			this.minPrice = minPrice;
-			this.maxPrice = maxPrice;
-			this.currentPrice = currentPrice;
-		}
-	}
+        public String name;
+        public double minPrice;
+        public double maxPrice;
+        public double currentPrice;
+
+        public Stock(String name, double minPrice, double maxPrice, double currentPrice) {
+            this.name = name;
+            this.minPrice = minPrice;
+            this.maxPrice = maxPrice;
+            this.currentPrice = currentPrice;
+        }
+    }
 
 }

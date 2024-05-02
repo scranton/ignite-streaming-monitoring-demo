@@ -1,25 +1,23 @@
 package org.gridgain.demo;
 
-import java.sql.Timestamp;
-
 import org.apache.ignite.cache.query.annotations.QuerySqlField;
 
+import java.sql.Timestamp;
+
 public class Trade {
-	
-	public enum TRADE_TYPE { BUY, SELL };
-	
-	@QuerySqlField(index = true)
-    private String symbol;
-	@QuerySqlField
+
+    @QuerySqlField(index = true)
+    private final String symbol;
+
+    @QuerySqlField
     private int order_quantity;
-	@QuerySqlField
-    private double bid_price;
-	@QuerySqlField
-    private String trade_type;
-	@QuerySqlField
-    private Timestamp order_date;
-	
-	private long timestamp;
+    @QuerySqlField
+    private final double bid_price;
+    @QuerySqlField
+    private final String trade_type;
+    @QuerySqlField
+    private final Timestamp order_date;
+    private long timestamp;
 
     public Trade(String symbol, int order_quantity, double bid_price, String trade_type, Timestamp order_date) {
         this.symbol = symbol;
@@ -54,12 +52,14 @@ public class Trade {
         return order_date;
     }
 
-	public long getTimestamp() {
-		return timestamp;
-	}
+    public long getTimestamp() {
+        return timestamp;
+    }
 
-	public void setTimestamp(long timestamp) {
-		this.timestamp = timestamp;
-	}
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public enum TRADE_TYPE {BUY, SELL}
 }
 
